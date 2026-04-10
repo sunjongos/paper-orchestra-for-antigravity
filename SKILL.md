@@ -33,5 +33,8 @@ Do NOT skip ahead to the next phase without explicit permission if there is a `[
 
 ### Phase 5: COMPILER (Multi-Format Rendering)
 1. **Context Switch**: You are now the Formatting & Compilation Engine.
-2. **Action**: The manuscript is complete. Use `run_command` to execute `python -m pypandoc` or similar tools natively to convert the `manuscript.md` file into `manuscript.html`, `manuscript.docx`, and optionally `manuscript.pdf`. If you need a script to do this, use `write_to_file` to create a `build_paper.py` script and run it.
-3. **Delivery**: Provide the user with the absolute local paths to the final rendered files. The mission is now complete.
+2. **Action**: The user prefers HTML as the final output. The manuscript is complete. Use `run_command` or a custom Python compilation script (e.g., using `markdown` and `pdfkit`/`weasyprint`) via `write_to_file` to convert the `manuscript.md` file strictly in this sequence:
+   - **Step A**: Generate `manuscript.html` with beautiful CSS formatting and Base64 embedded images.
+   - **Step B**: Generate `manuscript.docx` (can use `pypandoc` or similar).
+   - **Step C**: Generate `manuscript.pdf` from the HTML.
+3. **Delivery**: Provide the user with the absolute local paths to the final rendered files, highlighting the HTML file as the primary deliverable. The mission is now complete.
