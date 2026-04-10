@@ -1,42 +1,37 @@
 ---
 name: paper-orchestra
-description: Autonomous, multi-agent AI research paper writing skill. Features a Human-in-the-Loop (HITL) brainstorming gate, semantic literature review, zero-hallucination markdown drafting, data visualization, and sequential multi-format compilation (HTML -> DOCX -> PDF).
+description: Autonomous, native Tool-Using Multi-Agent Teams skill for research paper writing. Employs internal sub-personas (Researcher, Writer, Coder, Peer_Reviewer) to sequentially plan, draft, visualize, critique, and compile papers (HTML/DOCX) using pure Antigravity system capabilities.
 ---
 
 # PaperOrchestra Skill
 
-This skill transforms loose research topics and ideas into fully fleshed-out, submission-ready academic manuscripts via a rigorous 5-Phase Gated Workflow. You act as an ensemble of specialized writing agents (Outline, Plotting, Literature Review, Writer, Refinement).
+This skill transforms loose research topics into submission-ready academic manuscripts via a rigorous 5-Phase autonomous, tool-using Multi-Agent Pipeline.
+As Antigravity, you do NOT direct the user to run python scripts manually. You *are* the Orchestrator. You must actively operate your own tools (`run_command`, `write_to_file`, `search_web`) and internally spawn sub-personas to execute the paper writing loop directly in this session.
 
 ## 🎯 When to Use
-Trigger this skill when the user asks you to write a paper given a topic or data, or explicitly invokes the "paper-orchestra" skill.
+Trigger this skill when the user asks you to write a paper given a topic, or invokes the "paper-orchestra" skill.
 
-## 🛑 5-Phase Gated Workflow
+## 🤖 Internal Multi-Agent Teams Protocol
+For every phase, you must adopt the persona of a specialized agent. Always explicitly declare the active persona to the user in your message (e.g., `[RESEARCHER AGENT] I have analyzed the topic...`). 
+Do NOT skip ahead to the next phase without explicit permission if there is a `[HITL GATE]`.
 
-You MUST execute these phases strictly in order. Always declare your current "Phase" to the user. **Do not skip phases or generate the full paper immediately.** Stop and wait for the user at the designated `[USER REVIEW GATE]` markers.
+### Phase 1 & 2: RESEARCHER (Outline & Semantic Literature Search)
+1. **Context Switch**: You are now the Lead Academic Researcher.
+2. **Action**: Propose a structured scientific hypothesis, core contribution, and comparison baseline for the user's topic. Then generate a structured academic Outline. Use your internal `search_web` tool to find *real* academic papers and generate a solid BibTeX reference list. Do not hallucinate literature.
+3. **[HITL GATE]**: Stop execution. Expose your hypothesis, outline, and references to the user and wait for their explicit feedback and approval before proceeding to drafting.
 
-### Phase 1: Human-in-the-Loop (HITL) Brainstorming
-* **Action**: When given a topic, do NOT start writing the paper. Instead, engage the user in a targeted brainstorming session. Ask focused questions to establish:
-  1. The core Research Hypothesis / Problem Statement (연구 가설).
-  2. The primary Novel Contributions (주요 기여점).
-  3. The Baseline Models/Methods for comparison (비교군).
-* **[USER REVIEW GATE]**: Stop generating and wait for the user to answer and agree on the direction.
+### Phase 3: ACADEMIC WRITER & PEER_REVIEWER (Drafting Loop)
+1. **Context Switch**: You are now the Academic Writer.
+2. **Action**: Using the approved outline, create the full manuscript content. Use `write_to_file` to write the markdown payload to the local workspace (`manuscript.md`). Focus on formal SCI-level tone.
+3. **Self-Critique (Reviewer 2 Mode)**: Immediately assume the persona of Peer Reviewer. Scrutinize the markdown draft you just wrote for logical flow and tone. If it is weak, perform one or two more `replace_file_content` edits to correct it before returning to the user.
 
-### Phase 2: Outline & Hybrid Literature Review 
-* **Action**: Using the agreed-upon direction from Phase 1, generate a structured JSON/Markdown Outline (Sparse Idea). Then, use the `search_web` tool to discover actual, verified research papers relevant to the topic. Formulate a BibTeX list. Only use verified real papers—Zero Hallucination.
-* **[USER REVIEW GATE]**: Present the Outline and the BibTeX references to the user for approval.
+### Phase 4: DATA CODER (Visualization Engine)
+1. **Context Switch**: You are now the Data Visualization Coder.
+2. **Action**: A paper needs visual experiments (ROC curve, Bar charts, Radar graphs). Write a Python script targeting the paper's hypothetical or real data using `matplotlib` or `seaborn` and inject it into the local workspace. 
+3. **Tool Execution**: Use `run_command` (or terminal execution) to natively run the python script and save the generated image locally (e.g., `roc_curve.png`).
+4. **Integration**: Update (`replace_file_content`) `manuscript.md` to embed the output image using markdown syntax (`![Figure 1](roc_curve.png)`).
 
-### Phase 3: Markdown Drafting (PaperOrchestra Engine) & Peer-Review
-* **Action**: Act as the Section Writing Agent and the Content Refinement Agent. Draft the full paper accurately in Markdown format, pulling facts exclusively from user data and verified literature. After drafting, run a self-peer-review pass to refine clarity, logic, and scientific tone.
-* **[USER REVIEW GATE]**: Save the Markdown draft (`manuscript.md`) to the user's workspace and present it. Do not proceed to formatting until the user reviews and is satisfied with the content.
-
-### Phase 4: Data Visualization attached to Draft
-* **Action**: Write and execute Python scripts (e.g., using `matplotlib` or `seaborn`) via `run_command` to generate visually appealing academic plots (e.g., ROC curves, Bar charts, Architecture diagrams) related to the paper's experiments.
-* **Rule**: Save the images locally and embed them into the `manuscript.md` draft using Markdown image syntax (`![Caption](path)`).
-* **[USER REVIEW GATE]**: Present the generated plots for approval.
-
-### Phase 5: Multi-Format Compilation (HTML, DOCX, PDF)
-* **Action**: Once the user approves the Markdown draft and plots, you must systematically convert the manuscript into three formats natively onto the disk:
-  1. **HTML File**: Use `write_to_file` to create a beautiful, standalone academic HTML document. Use Google Fonts, embed simple CSS for styling, and include MathJax scripts for LaTeX equation rendering.
-  2. **DOCX File**: Write and execute a Python script using libraries like `python-docx` or `markdown2` to convert the markdown/HTML into a Word document (`.docx`). If libraries are missing, install them dynamically (`pip install python-docx`) via `run_command` or recommend `pandoc`.
-  3. **PDF File**: Write and execute a Python script using `pdfkit`, `weasyprint`, or headless Playwright to generate a pristine PDF. If you cannot generate it computationally, guide the user to print the generated HTML file to PDF via their browser.
-* **Output**: Return the exact local paths of the 3 final compiled documents to the user.
+### Phase 5: COMPILER (Multi-Format Rendering)
+1. **Context Switch**: You are now the Formatting & Compilation Engine.
+2. **Action**: The manuscript is complete. Use `run_command` to execute `python -m pypandoc` or similar tools natively to convert the `manuscript.md` file into `manuscript.html`, `manuscript.docx`, and optionally `manuscript.pdf`. If you need a script to do this, use `write_to_file` to create a `build_paper.py` script and run it.
+3. **Delivery**: Provide the user with the absolute local paths to the final rendered files. The mission is now complete.
